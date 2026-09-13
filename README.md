@@ -1,44 +1,46 @@
-# SolarFlowRefiner
-
-**Refinement-Aware Flow Matching for Surface Solar Radiation Downscaling**
+<p align="center">
+<h1 align="center"><strong>☀️ SolarFlowRefiner: Refinement-Aware Flow Matching <br> for Surface Solar Radiation Downscaling</strong></h1>
+  <p align="center">
+    Anonymous Submission
+    <br>
+    AAAI 2027
+  </p>
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg" alt="arXiv"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
-  <a href="#"><img src="https://img.shields.io/badge/AAAI-2027-green.svg" alt="AAAI 2027"></a>
+  <a href="#" target="_blank">
+    <img src="https://img.shields.io/badge/ArXiv-XXXX.XXXXX-red">
+  </a>
+  <a href="https://github.com/UdbhavSrivastava/SolarFlowRefiner" target="_blank">
+    <img src="https://img.shields.io/badge/Project-SolarFlowRefiner-blue">
+  </a>
+  <a href="https://github.com/UdbhavSrivastava/SolarFlowRefiner/blob/main/LICENSE" target="_blank">
+    <img src="https://img.shields.io/badge/License-MIT-green">
+  </a>
 </p>
-
----
-
-## Architecture
 
 <p align="center">
-  <img src="assets/fig01.jpg" width="95%" alt="SolarFlowRefiner Architecture"/>
+  <img src="assets/fig01.jpg" width="90%" alt="SolarFlowRefiner: architecture overview"/>
 </p>
-
-**Figure 1**: Overview of SolarFlowRefiner. ERA5 radiative variables and SolarCube auxiliary channels condition a FlowMatch residual generator, which predicts an initial normalized residual relative to the upsampled ERA5 SSR baseline. A PDE-style refiner then performs iterative correction updates over K=8 refinement levels before reconstructing the high-resolution SSR field. In SolarFlowRefiner, the refinement loss is backpropagated through both the refiner and the FlowMatch sampler, making generation refinement-aware.
-
----
 
 ## Overview
 
-High-resolution surface solar radiation (SSR) is critical for solar forecasting and grid operation. However, coarse reanalysis products like ERA5 (~0.25° resolution) cannot resolve the sharp, localized irradiance changes caused by clouds. This work addresses three key challenges in SSR downscaling:
+High-resolution surface solar radiation (SSR) downscaling from coarse ERA5 reanalysis to fine SolarCube targets is hard because cloud-driven irradiance variability is sharp, localized, and inherently ambiguous. Post-hoc refinement approaches optimize the generator independently from the correction process, creating a stage-wise mismatch:
 
-1. **One-to-many ambiguity**: A single coarse ERA5 cell may contain both sunlit and cloud-shadowed regions, making the reconstruction inherently uncertain.
+1. **One-to-many ambiguity** — a single coarse ERA5 cell may contain both sunlit and cloud-shadowed regions, making the high-resolution SSR field inherently uncertain.
+2. **Oversmoothing** — deterministic models trained with pixel-wise losses regress toward conditional means, missing sharp cloud-boundary gradients.
+3. **Stage-wise mismatch** — post-hoc refinement trains the generator independently, even though its output determines the refiner's initial state.
 
-2. **Oversmoothing**: Deterministic models trained with pixel-wise losses tend to regress toward conditional means, missing sharp cloud-boundary gradients.
+**SolarFlowRefiner** addresses all three with a unified design:
 
-3. **Stage-wise mismatch**: Post-hoc refinement optimizes the generator independently from the correction process, even though the generator output determines the refiner's initial state.
+* A **prediction-conditioned refinement path** constructed from the current FlowMatch output rather than the ground-truth target, exposing the refiner to the structured errors produced by the generator.
+* A **PDE-style multilevel denoising refiner** that progressively corrects residual errors over $K{=}8$ levels with an exponentially decaying noise schedule.
+* A **refinement-aware joint optimization** where the refinement loss is backpropagated through the differentiable FlowMatch sampler, allowing the generator and refiner to co-adapt.
 
-**SolarFlowRefiner** addresses these issues through refinement-aware generation. A conditional FlowMatch model first generates a normalized SSR residual, then a prediction-conditioned PDE-style refiner iteratively corrects structured errors. Crucially, the refinement loss is backpropagated through the differentiable FlowMatch sampler, allowing the generator to learn residuals that are both accurate and refinable.
-
----
+Empirically, SolarFlowRefiner achieves **18% lower MAE** and **16% lower RMSE** than the strongest post-hoc PDE refiner on the ERA5–SolarCube benchmark, while improving structural fidelity (SSIM: 0.727 → 0.827).
 
 ## Key Results
 
-### Test-Set Performance
-
-All metrics computed after reconstructing physical SSR from predicted normalized residuals. Lower is better for MAE, RMSE, LPIPS, FID; higher is better for SSIM.
+Test-set SSR downscaling performance (32,159 train / 4,519 val / 8,994 test samples). Lower is better for MAE, RMSE, LPIPS, FID; higher is better for SSIM.
 
 | Method | MAE ↓ | RMSE ↓ | SSIM ↑ | LPIPS ↓ | FID ↓ |
 |--------|--------|---------|---------|----------|--------|
@@ -53,18 +55,11 @@ All metrics computed after reconstructing physical SSR from predicted normalized
 | FlowRefiner-PDE | 13.58 | 20.31 | 0.727 | 0.161 | 37.49 |
 | **SolarFlowRefiner** | **11.13** | **17.11** | **0.827** | **0.137** | 36.23 |
 
-**Improvements over FlowRefiner-PDE (post-hoc baseline):**
-- MAE: 13.58 → 11.13 (**~18% reduction**)
-- RMSE: 20.31 → 17.11 (**~16% reduction**)
-- SSIM: 0.727 → 0.827 (**+13.7% structural fidelity**)
-
-### Qualitative Comparison
-
 <p align="center">
-  <img src="assets/fig02.png" width="95%" alt="Qualitative SSR Reconstruction"/>
+  <img src="assets/fig02.png" width="90%" alt="Qualitative SSR reconstruction and error maps"/>
 </p>
 
-**Figure 2**: SSR reconstruction and error maps for a held-out test sample. SolarFlowRefiner produces the lowest per-sample MAE and RMSE, reducing both broad residual bias and localized cloud-edge errors.
+> **Figure 2**: SSR reconstruction and error maps for a held-out test sample. SolarFlowRefiner produces the lowest per-sample MAE and RMSE, reducing both broad residual bias and localized cloud-edge errors.
 
 ### Input-Channel Ablation
 
@@ -76,78 +71,38 @@ The ERA5 SSR baseline is used for residual reconstruction in all settings; ablat
 | SolarCube only | 17.31 | 24.70 | 0.710 | 0.155 | 37.10 |
 | **ERA5 + SolarCube** | **11.13** | **17.11** | **0.827** | **0.137** | **36.23** |
 
----
-
 ## Installation
 
-### Requirements
-
-- Python 3.8+
-- PyTorch 2.0+ with CUDA support (CPU execution supported but slow)
-- Nvidia GPU with ~17 GB VRAM (RTX 5060 or better recommended)
-
-### Conda Environment Setup
-
 ```bash
-# Create a new conda environment
+git clone https://github.com/UdbhavSrivastava/SolarFlowRefiner.git
+cd SolarFlowRefiner
 conda create -n solarflow python=3.9 -y
 conda activate solarflow
-
-# Install PyTorch with CUDA (adjust cuda version as needed)
 conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia -y
-
-# Install other dependencies
 pip install -r requirements.txt
 ```
 
-### Pip-Only Setup
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-**Key Dependencies:**
-- `torch` >= 2.0
-- `numpy`, `pandas` - Numerical computing
-- `xarray`, `h5py`, `cfgrib`, `eccodes` - Geospatial data I/O
-- `Pillow`, `scikit-image` - Image processing
-- `tqdm` - Progress bars
-
----
+Tested with **PyTorch 2.0+** and a single NVIDIA GPU. Peak VRAM for the main setting (end-to-end SolarFlowRefiner, batch size 1, $K{=}8$ refinement levels) is ≈17 GB; an RTX 5060 or better is recommended.
 
 ## Data
 
-### Dataset Overview
+SolarFlowRefiner trains on two complementary sources:
 
 | Dataset | Resolution | Channels | Role |
 |---------|-----------|----------|------|
 | **ERA5** | ~0.25° (~25 km) | 5 radiative | Coarse physical baseline |
 | **SolarCube** | High-res (~1 km) | 5 auxiliary + SSR target | Cloud context + ground truth |
 
-**ERA5 Radiative Channels (5):**
-- `era_ssrd`: Surface solar radiation downwards
-- `era_ssr`: Surface net solar radiation
-- `era_ssrdc`: Clear-sky surface solar radiation downwards
-- `era_fdir`: Total sky direct solar radiation
-- `era_cdir`: Clear-sky direct solar radiation
+**ERA5 radiative channels (5):**
+`era_ssrd`, `era_ssr`, `era_ssrdc`, `era_fdir`, `era_cdir`
 
-**SolarCube Auxiliary Channels (5):**
-- `vis047`, `vis086`: Visible satellite reflectance
-- `ir133`: Infrared brightness temperature
-- `sza`: Solar zenith angle
-- `cm`: Cloud mask
+**SolarCube auxiliary channels (5):**
+`vis047`, `vis086`, `ir133`, `sza`, `cm`
 
 **Target:**
-- `solarcube_ssr_hourly`: Hourly mean high-resolution SSR field
+`solarcube_ssr_hourly` — Hourly mean high-resolution SSR field
 
-### Dataset Split
-
-Day-blocked train/validation/test split with 70/10/20 ratio:
+**Dataset split.** Day-blocked train/validation/test with 70/10/20 ratio:
 
 | Split | Samples | Fraction |
 |-------|---------|----------|
@@ -158,34 +113,38 @@ Day-blocked train/validation/test split with 70/10/20 ratio:
 **Tiles used:** 1-10, 12, 14 (12 global stations passing quality-control threshold)
 **Split strategy:** Whole UTC-day blocks within each tile/month to prevent temporal leakage
 
-### Download & Preprocessing
+**Download & preprocessing.**
 
-1. **Download raw data** (ERA5 and SolarCube files) and place in `data/raw/`
-
-2. **Check inputs:**
+1. Download raw ERA5 and SolarCube files and place in `data/raw/`
+2. Check inputs:
    ```bash
    python preprocess.py check
    ```
-
-3. **Preprocess raw files:**
+3. Preprocess raw files:
    ```bash
    python preprocess.py preprocess --tiles 1-10,12,14 --months 1-12
    ```
-
-4. **Create day-block splits:**
+4. Create day-block splits:
    ```bash
    python preprocess.py splits --split-tiles 1-10,12,14 --split-months 1-12 --seed 42
    ```
 
 This generates `splits/train_index.csv`, `splits/val_index.csv`, and `splits/test_index.csv`.
 
----
+## Quick Start
 
-## Training
+### Training modes
 
-### Quick Start: End-to-End SolarFlowRefiner (Recommended)
+SolarFlowRefiner supports **two** training strategies. Both land on the same final configuration: **end-to-end refinement-aware generation with K=8 refinement levels**.
 
-Train the refinement-aware model jointly from scratch:
+| Mode | What it does | Schedule | Paper result |
+|------|--------------|----------|--------------|
+| `joint` | Train SolarFlowRefiner end-to-end from scratch | 100 epochs single stage | **recommended**: reaches MAE = 11.13, RMSE = 17.11 |
+| `two_stage` | (1) pretrain FlowMatch base (100 ep), (2) train PDE refiner on frozen base (50 ep) | 100 ep + 50 ep | Post-hoc baseline: MAE = 13.58, RMSE = 20.31 |
+
+Why joint is preferred: End-to-end optimization allows the generator to learn residuals that are both accurate and refinable, rather than optimizing each stage independently. The two-stage mode reproduces the FlowRefiner-PDE post-hoc baseline.
+
+**Recommended: End-to-end joint training**
 
 ```bash
 python train.py --model solarflowrefiner \
@@ -200,13 +159,13 @@ python train.py --model solarflowrefiner \
 - Learning rates: 2×10⁻⁶ (FlowMatch generator), 2×10⁻⁵ (refiner)
 - Optimizer: AdamW with weight decay 10⁻⁴
 - EMA decay: 0.9999
-- Refinement levels: K=8
-- Noise schedule: σ ∈ [0.35, 0.01]
+- Refinement levels: $K{=}8$
+- Noise schedule: $\sigma \in [0.35, 0.01]$ (exponential decay)
 - Hardware: Nvidia RTX 5060 (~17 GB VRAM)
 
-### Two-Stage Workflow (Baseline)
+### Two-stage workflow (post-hoc baseline)
 
-#### Stage 1: Train Standalone FlowMatch Generator
+**Stage 1 — FlowMatch pretrain (100 epochs)**
 
 ```bash
 python train.py --model flowmatch \
@@ -218,35 +177,10 @@ python train.py --model flowmatch \
      --lr 2e-5
 ```
 
-#### Stage 2a: Post-Hoc ODE Refinement
+**Stage 2 — FlowRefiner-PDE (frozen generator)**
 
 ```bash
 # Precompute base predictions
-python run_experiment.py --model flowrefiner-ode --stage precompute \
-  -- --index splits/train_index.csv \
-     --run-dir runs/FlowMatch \
-     --out runs/base_cache/train_base.npy
-
-python run_experiment.py --model flowrefiner-ode --stage precompute \
-  -- --index splits/val_index.csv \
-     --run-dir runs/FlowMatch \
-     --out runs/base_cache/val_base.npy
-
-# Train ODE refiner (frozen generator)
-python train.py --model flowrefiner-ode \
-  -- --train-index splits/train_index.csv \
-     --val-index splits/val_index.csv \
-     --train-base-cache runs/base_cache/train_base.npy \
-     --val-base-cache runs/base_cache/val_base.npy \
-     --base-run-dir runs/FlowMatch \
-     --out-dir runs/FlowRefiner-ODE \
-     --epochs 50
-```
-
-#### Stage 2b: Post-Hoc PDE Refinement
-
-```bash
-# Precompute base predictions (if not already done)
 python run_experiment.py --model flowrefiner-pde --stage precompute \
   -- --index splits/train_index.csv \
      --run-dir runs/FlowMatch \
@@ -257,7 +191,7 @@ python run_experiment.py --model flowrefiner-pde --stage precompute \
      --run-dir runs/FlowMatch \
      --out runs/base_cache/val_base.npy
 
-# Train PDE refiner (frozen generator)
+# Train PDE refiner
 python train.py --model flowrefiner-pde \
   -- --train-index splits/train_index.csv \
      --val-index splits/val_index.csv \
@@ -278,91 +212,68 @@ python evaluate.py --model solarflowrefiner \
 
 Metrics computed: MAE, RMSE, SSIM, LPIPS, FID
 
----
-
 ## Method Summary
 
-SolarFlowRefiner introduces **refinement-aware flow matching** for solar downscaling:
+**Setup.** Given coarse ERA5 radiative variables and high-resolution SolarCube auxiliary channels $x$, predict the high-resolution SSR field $y$ via normalized residual generation relative to the upsampled ERA5 SSR baseline $b$.
 
-### 1. Residual Formulation
+**Residual formulation.**
 
-Rather than predicting SSR directly, we model the normalized residual correction:
+$$
+r = y - b, \quad \tilde{r} = \frac{r - \mu_r}{\sigma_r}, \quad \hat{y} = b + \sigma_r \hat{\tilde{r}} + \mu_r
+$$
 
-```
-r = y - b                     (residual)
-r̃ = (r - μ_r) / σ_r          (normalized residual)
-ŷ = b + σ_r · r̂̃ + μ_r        (reconstruction)
-```
+**Architecture.** A multiscale residual U-Net (base channel 64, multipliers $(1,2,4,8)$, 2 residual blocks per stage) serves as both FlowMatch generator and PDE refiner.
 
-where `b` is the upsampled ERA5 SSR baseline, `y` is the SolarCube target, and `μ_r, σ_r` are training-set residual statistics.
+**FlowMatch predictor.** Learn a rectified flow between Gaussian noise $z_0 \sim \mathcal{N}(0,I)$ and the normalized target residual $z_1 = \tilde{r}$:
 
-### 2. Conditional FlowMatch Predictor
+$$
+z_t = (1-t)z_0 + t z_1, \quad \mathcal{L}_{\mathrm{FM}} = \mathbb{E}_{t,z_0,\tilde{r}} \left[ \| f_\theta(z_t,x,t) - (z_1 - z_0) \|_1 \right]
+$$
 
-A U-Net generator learns a rectified flow between Gaussian noise `z_0 ~ N(0,I)` and the normalized target residual `z_1 = r̃`:
+At inference, integrate the learned ODE $\frac{dz}{dt} = f_\theta(z,x,t)$ from $t{=}0$ to $t{=}1$ using an 8-step Euler solver to produce the base residual $\tilde{r}_b$.
 
-```
-z_t = (1-t)z_0 + t·z_1                      (linear path)
-L_FM = E[ || f_θ(z_t, x, t) - (z_1 - z_0) ||_1 ]   (velocity objective)
-```
+**Prediction-conditioned refinement path.** Construct refinement states from the current generator prediction:
 
-At inference, the ODE `dz/dt = f_θ(z, x, t)` is integrated from `t=0` to `t=1` using an 8-step Euler solver to produce the base residual `r̃_b`.
+$$
+c_k = (1-\alpha_k)\tilde{r}_b + \alpha_k \tilde{r}, \quad \bar{c}_k = c_k + \sigma_k \epsilon, \quad \epsilon \sim \mathcal{N}(0,I)
+$$
 
-### 3. Prediction-Conditioned Refinement Path
+where $\alpha_k = k/(K{-}1)$ and $\sigma_k$ decays exponentially from 0.35 to 0.01 over $K{=}8$ levels. This exposes the refiner to the **structured errors** produced by the current generator.
 
-Instead of perturbing the ground-truth target, we construct refinement states from the **current generator prediction**:
+**PDE-style refiner.** The refiner $g_\phi$ predicts the clean target residual from noisy intermediate states:
 
-```
-c_k = (1 - α_k)·r̃_b + α_k·r̃              (base-to-target path)
-c̄_k = c_k + σ_k·ε, ε ~ N(0,I)            (noisy state)
-```
+$$
+\hat{r}_k = g_\phi(\bar{c}_k, x, \tilde{r}_b, k)
+$$
 
-where `α_k = k/(K-1)` and `σ_k` decays exponentially from 0.35 to 0.01 over K=8 levels. This exposes the refiner to the **structured errors** produced by the generator.
-
-### 4. PDE-Style Multilevel Refiner
-
-The refiner `g_φ` predicts the clean target residual from noisy intermediate states:
-
-```
-r̂_k = g_φ(c̄_k, x, r̃_b, k)
-
-L_ref = || r̂_k - r̃ ||_1 + λ_mse·|| r̂_k - r̃ ||_2² + λ_∇·|| ∇r̂_k - ∇r̃ ||_1
-```
+$$
+\mathcal{L}_{\mathrm{ref}} = \| \hat{r}_k - \tilde{r} \|_1 + \lambda_{\mathrm{mse}} \| \hat{r}_k - \tilde{r} \|_2^2 + \lambda_{\nabla} \| \nabla \hat{r}_k - \nabla \tilde{r} \|_1
+$$
 
 At inference, refinement proceeds iteratively:
 
-```
-u_0 = r̃_b                                 (initialize from base)
-u_{k+1} = u_k + η·(r̂_k - u_k)            (correction update)
-```
+$$
+u_0 = \tilde{r}_b, \quad u_{k+1} = u_k + \eta (\hat{r}_k - u_k)
+$$
 
-### 5. Refinement-Aware Joint Optimization
+**Refinement-aware joint optimization.** SolarFlowRefiner runs the differentiable FlowMatch sampler inside the training loop:
 
-The key distinction: SolarFlowRefiner runs the differentiable FlowMatch sampler **inside the training loop**:
+$$
+\mathcal{L}_{\mathrm{joint}} = \lambda_{\mathrm{FM}} \mathcal{L}_{\mathrm{FM}} + \lambda_{\mathrm{ref}} \mathcal{L}_{\mathrm{ref}}
+$$
 
-```
-L_joint = λ_FM·L_FM + λ_ref·L_ref
-```
+Because $\tilde{r}_b = S_\theta(z_0,x)$ appears in both the refinement path and refiner conditioning, gradients flow back through the sampler. This allows the generator and refiner to co-adapt.
 
-Because `r̃_b = S_θ(z_0, x)` appears in both the refinement path and refiner conditioning, gradients flow back through the sampler:
-
-```
-∇_θ L_ref ≠ 0
-```
-
-This allows the generator and refiner to **co-adapt**: the generator learns to produce residuals that are easy to refine, while the refiner trains on prediction-conditioned states.
-
-### Model Variants
+**Model variants.**
 
 | Model | Generator | Refiner | Coupling |
 |-------|-----------|---------|----------|
-| **FlowMatch** | FlowMatch | None | N/A |
-| **FlowRefiner-ODE** | FlowMatch (frozen) | ODE correction | Post-hoc |
-| **FlowRefiner-PDE** | FlowMatch (frozen) | PDE denoising | Post-hoc |
+| FlowMatch | FlowMatch | None | N/A |
+| FlowRefiner-ODE | FlowMatch (frozen) | ODE correction | Post-hoc |
+| FlowRefiner-PDE | FlowMatch (frozen) | PDE denoising | Post-hoc |
 | **SolarFlowRefiner** | FlowMatch (trainable) | PDE denoising | **End-to-end** |
 
----
-
-## Repository Structure
+## Repository Layout
 
 ```
 SolarFlowRefiner/
@@ -372,17 +283,8 @@ SolarFlowRefiner/
 │   │   ├── evaluate.py
 │   │   └── model.py
 │   ├── FlowRefiner-ODE/        # Post-hoc ODE-style refiner
-│   │   ├── train.py
-│   │   ├── evaluate.py
-│   │   └── model.py
 │   ├── FlowRefiner-PDE/        # Post-hoc PDE-style refiner
-│   │   ├── train.py
-│   │   ├── evaluate.py
-│   │   └── model.py
 │   ├── SolarFlowRefiner/       # End-to-end refinement-aware model
-│   │   ├── train.py
-│   │   ├── evaluate.py
-│   │   └── model.py
 │   └── unet.py                 # Shared U-Net backbone
 ├── Dataset/
 │   └── preprocessing/          # Data pipeline scripts
@@ -396,14 +298,6 @@ SolarFlowRefiner/
 │   └── metrics.py              # SSIM evaluation
 ├── configs/                    # Model configuration files (JSON)
 ├── scripts/                    # Example training/evaluation commands
-├── splits/                     # Train/val/test manifests (CSV)
-│   ├── train_index.csv
-│   ├── val_index.csv
-│   └── test_index.csv
-├── data/                       # Dataset directory
-│   ├── raw/                    # Raw ERA5 and SolarCube files
-│   └── processed/              # Preprocessed NPZ samples
-├── runs/                       # Training run outputs
 ├── train.py                    # Top-level training router
 ├── evaluate.py                 # Top-level evaluation router
 ├── run_experiment.py           # Model/stage dispatcher
@@ -412,7 +306,33 @@ SolarFlowRefiner/
 └── README.md
 ```
 
----
+## Reproducing Paper Numbers
+
+To reproduce the best SolarFlowRefiner result (MAE = 11.13, RMSE = 17.11):
+
+```bash
+# End-to-end joint training (~100 epochs on RTX 5060, batch_size=1)
+python train.py --model solarflowrefiner \
+  -- --train-index splits/train_index.csv \
+     --val-index splits/val_index.csv \
+     --out-dir runs/SolarFlowRefiner \
+     --epochs 100
+
+# Evaluate on held-out test set
+python evaluate.py --model solarflowrefiner \
+  -- --test-index splits/test_index.csv \
+     --run-dir runs/SolarFlowRefiner
+```
+
+Expected test-set metrics (matching the paper's Table 1, main result):
+
+```
+MAE (W/m²)  = 11.13
+RMSE (W/m²) = 17.11
+SSIM        = 0.827
+LPIPS       = 0.137
+FID         = 36.23
+```
 
 ## Citation
 
