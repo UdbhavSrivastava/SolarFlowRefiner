@@ -1,0 +1,10 @@
+numpy
+pandas
+torch
+tqdm
+h5py
+xarray
+cfgrib
+eccodes
+Pillow
+scikit-image

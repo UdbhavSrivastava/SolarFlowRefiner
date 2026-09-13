@@ -1,0 +1,53 @@
+Run from an Anaconda Prompt or cmd:
+
+REM From the repository root, run:
+set KMP_DUPLICATE_LIB_OK=TRUE
+
+
+REM 1. Check entry points
+
+python train.py --help
+python evaluate.py --help
+python preprocess.py --help
+python run_experiment.py --help
+
+
+REM 2. Tiny smoke-train FlowMatch
+REM This computes normalization stats once. It can take a while on Google Drive.
+
+python train.py --model flowmatch -- --train-index splits/train_index.csv --val-index splits/val_index.csv --out-dir runs/smoke_FlowMatch --epochs 1 --batch-size 1 --base-channels 8 --channel-multipliers 1,2 --res-blocks 1 --sample-steps 2 --max-train-samples 4 --max-val-samples 4 --device auto
+
+
+REM 3. Precompute tiny FlowMatch base caches for refiners
+
+python run_experiment.py --model flowrefiner-ode --stage precompute -- --index splits/train_index.csv --run-dir runs/smoke_FlowMatch --out runs/smoke_base_cache/train_base.npy --checkpoint last --batch-size 1 --sample-steps 2 --max-samples 4 --device auto
+python run_experiment.py --model flowrefiner-ode --stage precompute -- --index splits/val_index.csv --run-dir runs/smoke_FlowMatch --out runs/smoke_base_cache/val_base.npy --checkpoint last --batch-size 1 --sample-steps 2 --max-samples 4 --device auto
+python run_experiment.py --model flowrefiner-ode --stage precompute -- --index splits/test_index.csv --run-dir runs/smoke_FlowMatch --out runs/smoke_base_cache/test_base.npy --checkpoint last --batch-size 1 --sample-steps 2 --max-samples 4 --device auto
+
+
+REM 4. Tiny smoke-train FlowRefiner-ODE
+REM FlowRefiner-ODE uses --sample-steps, not --refinement-steps.
+
+python train.py --model flowrefiner-ode -- --train-index splits/train_index.csv --val-index splits/val_index.csv --train-base-cache runs/smoke_base_cache/train_base.npy --val-base-cache runs/smoke_base_cache/val_base.npy --base-run-dir runs/smoke_FlowMatch --base-checkpoint last --out-dir runs/smoke_FlowRefiner-ODE --epochs 1 --batch-size 1 --base-channels 8 --channel-multipliers 1,2 --res-blocks 1 --sample-steps 2 --max-train-samples 4 --max-val-samples 4 --device auto
+
+
+REM 5. Tiny smoke-train FlowRefiner-PDE
+
+python train.py --model flowrefiner-pde -- --train-index splits/train_index.csv --val-index splits/val_index.csv --train-base-cache runs/smoke_base_cache/train_base.npy --val-base-cache runs/smoke_base_cache/val_base.npy --base-run-dir runs/smoke_FlowMatch --base-checkpoint last --out-dir runs/smoke_FlowRefiner-PDE --epochs 1 --batch-size 1 --base-channels 8 --channel-multipliers 1,2 --res-blocks 1 --refinement-steps 2 --max-train-samples 4 --max-val-samples 4 --device auto
+
+
+REM 6. Tiny smoke-train SolarFlowRefiner
+REM Reuses FlowMatch smoke stats to avoid recomputing normalization stats.
+
+python train.py --model solarflowrefiner -- --train-index splits/train_index.csv --val-index splits/val_index.csv --stats-path runs/smoke_FlowMatch/normalization_stats.json --out-dir runs/smoke_SolarFlowRefiner --epochs 1 --batch-size 1 --base-channels 8 --channel-multipliers 1,2 --res-blocks 1 --refiner-base-channels 8 --refiner-channel-multipliers 1,2 --refiner-res-blocks 1 --flowmatch-sample-steps 2 --refinement-steps 2 --max-train-samples 4 --max-val-samples 4 --device auto
+
+
+REM 7. Tiny evaluate checks
+
+python evaluate.py --model flowmatch -- --test-index splits/test_index.csv --run-dir runs/smoke_FlowMatch --checkpoint last --batch-size 1 --sample-steps 2 --max-samples 4 --device auto --out-dir runs/smoke_FlowMatch/test_eval
+
+python evaluate.py --model flowrefiner-ode -- --test-index splits/test_index.csv --test-base-cache runs/smoke_base_cache/test_base.npy --run-dir runs/smoke_FlowRefiner-ODE --checkpoint last --batch-size 1 --sample-steps 2 --max-samples 4 --device auto --out-dir runs/smoke_FlowRefiner-ODE/test_eval
+
+python evaluate.py --model flowrefiner-pde -- --test-index splits/test_index.csv --test-base-cache runs/smoke_base_cache/test_base.npy --run-dir runs/smoke_FlowRefiner-PDE --checkpoint last --batch-size 1 --refinement-steps 2 --max-samples 4 --device auto --out-dir runs/smoke_FlowRefiner-PDE/test_eval
+
+python evaluate.py --model solarflowrefiner -- --test-index splits/test_index.csv --run-dir runs/smoke_SolarFlowRefiner --checkpoint last --batch-size 1 --flowmatch-sample-steps 2 --refinement-steps 2 --max-samples 4 --device auto --out-dir runs/smoke_SolarFlowRefiner/test_eval
