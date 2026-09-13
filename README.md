@@ -120,7 +120,10 @@ SolarFlowRefiner trains on two complementary sources:
 
 **Download & preprocessing.**
 
-1. Download raw ERA5 and SolarCube files and place in `data/raw/`
+**Dataset:** The preprocessed ERA5 and SolarCube data is available at:
+[Google Drive - SolarFlowRefiner Dataset](https://drive.google.com/drive/folders/1_Y1awqj32KqWV9nyHO2co4hj1Zj0FN9r?usp=sharing)
+
+1. Download raw ERA5 and SolarCube files from the link above and place in `data/raw/`
 2. Check inputs:
    ```bash
    python preprocess.py check
