@@ -1,9 +1,14 @@
 <p align="center">
 <h1 align="center"><strong>☀️ SolarFlowRefiner: Refinement-Aware Flow Matching <br> for Surface Solar Radiation Downscaling</strong></h1>
   <p align="center">
-    Anonymous Submission
+    <a>Udbhav Srivastava<sup>1</sup>,</a>
+    <a>Antonita Racheal<sup>1</sup>,</a>
+    <a>Yiheng Chen<sup>1</sup>,</a>
+    <a>Runlong Yu<sup>1</sup>,</a>
+    <a>Xinyue Ye<sup>2</sup></a>
     <br>
-    AAAI 2027
+    <sup>1</sup>Department of Computer Science, University of Alabama<br>
+    <sup>2</sup>Department of Geography, University of Alabama
   </p>
 
 <p align="center">
@@ -177,10 +182,35 @@ python train.py --model flowmatch \
      --lr 2e-5
 ```
 
-**Stage 2 — FlowRefiner-PDE (frozen generator)**
+**Stage 2a — FlowRefiner-ODE (frozen generator)**
 
 ```bash
 # Precompute base predictions
+python run_experiment.py --model flowrefiner-ode --stage precompute \
+  -- --index splits/train_index.csv \
+     --run-dir runs/FlowMatch \
+     --out runs/base_cache/train_base.npy
+
+python run_experiment.py --model flowrefiner-ode --stage precompute \
+  -- --index splits/val_index.csv \
+     --run-dir runs/FlowMatch \
+     --out runs/base_cache/val_base.npy
+
+# Train ODE refiner
+python train.py --model flowrefiner-ode \
+  -- --train-index splits/train_index.csv \
+     --val-index splits/val_index.csv \
+     --train-base-cache runs/base_cache/train_base.npy \
+     --val-base-cache runs/base_cache/val_base.npy \
+     --base-run-dir runs/FlowMatch \
+     --out-dir runs/FlowRefiner-ODE \
+     --epochs 50
+```
+
+**Stage 2b — FlowRefiner-PDE (frozen generator)**
+
+```bash
+# Precompute base predictions (if not already done for ODE)
 python run_experiment.py --model flowrefiner-pde --stage precompute \
   -- --index splits/train_index.csv \
      --run-dir runs/FlowMatch \
