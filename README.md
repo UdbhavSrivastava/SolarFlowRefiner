@@ -13,7 +13,7 @@
 ## Architecture
 
 <p align="center">
-  <img src="Figures/fig01.jpg" width="95%" alt="SolarFlowRefiner Architecture"/>
+  <img src="assets/fig01.jpg" width="95%" alt="SolarFlowRefiner Architecture"/>
 </p>
 
 **Figure 1**: Overview of SolarFlowRefiner. ERA5 radiative variables and SolarCube auxiliary channels condition a FlowMatch residual generator, which predicts an initial normalized residual relative to the upsampled ERA5 SSR baseline. A PDE-style refiner then performs iterative correction updates over K=8 refinement levels before reconstructing the high-resolution SSR field. In SolarFlowRefiner, the refinement loss is backpropagated through both the refiner and the FlowMatch sampler, making generation refinement-aware.
@@ -61,7 +61,7 @@ All metrics computed after reconstructing physical SSR from predicted normalized
 ### Qualitative Comparison
 
 <p align="center">
-  <img src="Figures/fig02.png" width="95%" alt="Qualitative SSR Reconstruction"/>
+  <img src="assets/fig02.png" width="95%" alt="Qualitative SSR Reconstruction"/>
 </p>
 
 **Figure 2**: SSR reconstruction and error maps for a held-out test sample. SolarFlowRefiner produces the lowest per-sample MAE and RMSE, reducing both broad residual bias and localized cloud-edge errors.
@@ -157,28 +157,6 @@ Day-blocked train/validation/test split with 70/10/20 ratio:
 
 **Tiles used:** 1-10, 12, 14 (12 global stations passing quality-control threshold)
 **Split strategy:** Whole UTC-day blocks within each tile/month to prevent temporal leakage
-
-### Directory Structure
-
-After preprocessing, data should be organized as:
-
-```
-data/
-├── raw/
-│   ├── ERA5/
-│   │   ├── era5_YYYYMM_tile_XX.grib
-│   │   └── ...
-│   └── SolarCube/
-│       ├── solarcube_YYYYMM_tile_XX.nc
-│       └── ...
-└── processed/
-    └── tile_XX/
-        └── month_YY/
-            └── chunks/
-                ├── sample_0000.npz
-                ├── sample_0001.npz
-                └── ...
-```
 
 ### Download & Preprocessing
 
@@ -441,72 +419,5 @@ SolarFlowRefiner/
 If you find this work useful, please cite:
 
 ```bibtex
-@inproceedings{anonymous2027solarflowrefiner,
-  title={SolarFlowRefiner: Refinement-Aware Flow Matching for Surface Solar Radiation Downscaling},
-  author={Anonymous Authors},
-  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
-  year={2027}
-}
+% Citation will be added upon publication
 ```
-
-**Related Work:**
-
-```bibtex
-@article{flowmatch,
-  title={Flow Matching for Generative Modeling},
-  author={Lipman, Yaron and Chen, Ricky T. Q. and Ben-Hamu, Heli and Nickel, Maximilian and Le, Matthew},
-  journal={arXiv preprint arXiv:2210.02747},
-  year={2022}
-}
-
-@inproceedings{pderefiner,
-  title={PDE-Refiner: Achieving Accurate Long Rollouts with Neural PDE Solvers},
-  author={Lippe, Phillip and Veeling, Bastiaan S. and Perdikaris, Paris and Turner, Richard E. and Brandstetter, Johannes},
-  booktitle={NeurIPS},
-  year={2023}
-}
-
-@article{flowrefiner,
-  title={FlowRefiner: Refining Autoregressive 3D Turbulent Flow Prediction through Iterative Flow Matching},
-  author={Dai, Longxiang and others},
-  journal={arXiv preprint arXiv:2604.17149},
-  year={2026}
-}
-
-@article{era5,
-  title={The ERA5 global reanalysis},
-  author={Hersbach, Hans and others},
-  journal={Quarterly Journal of the Royal Meteorological Society},
-  volume={146},
-  pages={1999--2049},
-  year={2020}
-}
-
-@article{solarcube,
-  title={SolarCube: A high-resolution satellite-derived surface solar radiation dataset},
-  author={others},
-  journal={TBD},
-  year={TBD}
-}
-```
-
----
-
-## Acknowledgements
-
-- **ERA5 Data**: Copernicus Climate Change Service (C3S)
-- **SolarCube Dataset**: BSRN/PANGAEA station network
-- **FlowRefiner**: Inspiration for refinement-aware generation framework
-- **PyTorch Team**: Deep learning framework
-
----
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details.
-
----
-
-## Contact
-
-For questions or issues, please open an issue on the repository or contact the authors.
