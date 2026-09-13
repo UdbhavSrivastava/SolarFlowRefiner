@@ -145,7 +145,7 @@ SolarFlowRefiner supports **two** training strategies. Both land on the same fin
 | Mode | What it does | Schedule | Paper result |
 |------|--------------|----------|--------------|
 | `joint` | Train SolarFlowRefiner end-to-end from scratch | 100 epochs single stage | **recommended**: reaches MAE = 11.13, RMSE = 17.11 |
-| `two_stage` | (1) pretrain FlowMatch base (100 ep), (2) train PDE refiner on frozen base (50 ep) | 100 ep + 50 ep | Post-hoc baseline: MAE = 13.58, RMSE = 20.31 |
+| `two_stage` | (1) pretrain FlowMatch base (100 ep), (2) train PDE refiner on frozen base (100 ep) | 100 ep + 100 ep | Post-hoc baseline: MAE = 13.58, RMSE = 20.31 |
 
 Why joint is preferred: End-to-end optimization allows the generator to learn residuals that are both accurate and refinable, rather than optimizing each stage independently. The two-stage mode reproduces the FlowRefiner-PDE post-hoc baseline.
 
@@ -204,7 +204,7 @@ python train.py --model flowrefiner-ode \
      --val-base-cache runs/base_cache/val_base.npy \
      --base-run-dir runs/FlowMatch \
      --out-dir runs/FlowRefiner-ODE \
-     --epochs 50
+     --epochs 100
 ```
 
 **Stage 2b — FlowRefiner-PDE (frozen generator)**
@@ -229,7 +229,7 @@ python train.py --model flowrefiner-pde \
      --val-base-cache runs/base_cache/val_base.npy \
      --base-run-dir runs/FlowMatch \
      --out-dir runs/FlowRefiner-PDE \
-     --epochs 50
+     --epochs 100
 ```
 
 ### Evaluation
