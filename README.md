@@ -354,16 +354,6 @@ python evaluate.py --model solarflowrefiner \
      --run-dir runs/SolarFlowRefiner
 ```
 
-Expected test-set metrics (matching the paper's Table 1, main result):
-
-```
-MAE (W/m²)  = 11.13
-RMSE (W/m²) = 17.11
-SSIM        = 0.827
-LPIPS       = 0.137
-FID         = 36.23
-```
-
 ## Citation
 
 If you find this work useful, please cite:
