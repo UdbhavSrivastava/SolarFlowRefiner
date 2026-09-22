@@ -360,6 +360,8 @@ python evaluate.py --model solarflowrefiner \
 ## Citation
 
 If you find this work useful, please cite:
+
+```bibtex
 @misc{srivastava2026solarflowrefinerrefinementawareflowmatching,
       title={SolarFlowRefiner: Refinement-Aware Flow Matching for Surface Solar Radiation Downscaling}, 
       author={Udbhav Srivastava and Antonita Racheal and Yiheng Chen and Runlong Yu and Xinyue Ye},
@@ -369,7 +371,4 @@ If you find this work useful, please cite:
       primaryClass={cs.LG},
       url={https://arxiv.org/abs/2609.22126}, 
 }
-
-```bibtex
-% Citation will be added upon publication
 ```
