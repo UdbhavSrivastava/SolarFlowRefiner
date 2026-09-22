@@ -12,8 +12,8 @@
   </p>
 
 <p align="center">
-  <a href="#" target="_blank">
-    <img src="https://img.shields.io/badge/ArXiv-XXXX.XXXXX-red">
+  <a href="https://arxiv.org/abs/2609.22126" target="_blank">
+    <img src="https://img.shields.io/badge/ArXiv-2609.22126-red">
   </a>
   <a href="https://github.com/UdbhavSrivastava/SolarFlowRefiner" target="_blank">
     <img src="https://img.shields.io/badge/Project-SolarFlowRefiner-blue">
