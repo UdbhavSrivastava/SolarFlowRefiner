@@ -22,7 +22,7 @@
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
   <a href="https://drive.google.com/drive/folders/1_Y1awqj32KqWV9nyHO2co4hj1Zj0FN9r" target="_blank">
-    <img src="https://img.shields.io/badge/data-drive-grey">
+    <img src="https://img.shields.io/badge/data-drive-yellow">
   </a>
 </p>
 
