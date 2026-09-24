@@ -21,8 +21,8 @@
   <a href="https://github.com/UdbhavSrivastava/SolarFlowRefiner/blob/main/LICENSE" target="_blank">
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
-  <a href="https://drive.google.com/drive/folders/1_Y1awqj32KqWV9nyHO2co4hj1Zj0FN9r" target="_blank">
-    <img src="https://img.shields.io/badge/data-drive-yellow">
+  <a href="https://huggingface.co/datasets/Udbhav23/SolarFlowRefiner-Dataset" target="_blank">
+    <img src="https://img.shields.io/badge/data-HugginFace-yellow">
   </a>
 </p>
 
@@ -124,7 +124,7 @@ SolarFlowRefiner trains on two complementary sources:
 **Download & preprocessing.**
 
 **Dataset:** The preprocessed ERA5 and SolarCube data is available at:
-[Google Drive - SolarFlowRefiner Dataset](https://drive.google.com/drive/folders/1_Y1awqj32KqWV9nyHO2co4hj1Zj0FN9r?usp=sharing)
+[HuggingFace - SolarFlowRefiner Dataset](https://huggingface.co/datasets/Udbhav23/SolarFlowRefiner-Dataset)
 
 1. Download raw ERA5 and SolarCube files from the link above and place in `data/raw/`
 2. Check inputs:
