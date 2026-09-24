@@ -22,7 +22,7 @@
     <img src="https://img.shields.io/badge/License-MIT-green">
   </a>
   <a href="https://huggingface.co/datasets/Udbhav23/SolarFlowRefiner-Dataset" target="_blank">
-    <img src="https://img.shields.io/badge/data-HugginFace-yellow">
+    <img src="https://img.shields.io/badge/Data-HugginFace-yellow">
   </a>
 </p>
 
